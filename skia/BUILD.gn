@@ -1,0 +1,57 @@
+##############################################################
+
+import("//react-native/common.gni")
+
+config("LibFastImage_config") {
+  cflags_cc = [ "-std=c++17"]
+  cflags_cc += [
+    "-Wno-extra-semi",
+    "-Wno-sign-compare",
+    "-Wno-header-hygiene",
+  ]
+
+  include_dirs = [".",
+                  "//react-native/",
+                  "//react-native/ReactCommon/",
+                  "//react-native/ReactCommon/jsi/",
+                  "//react-native/ReactCommon/react/renderer/graphics/platform/cxx",
+                  "//react-native/ReactCommon/yoga/",
+                  "//third_party/glog:glog",
+                  "//rns_shell/",
+                  "//ReactSkia/",
+                  ]
+}
+
+rn_cxx_component("fastImage") {
+
+  # RNS Native module and its dependencies
+  sources = [
+  ]
+
+  # RNS Fabric Component and its dependencies
+  sources += [
+    "RSkComponentProviderFastImage.cpp",
+    "RSkComponentProviderFastImage.h",
+    "RSkComponentFastImage.cpp",
+    "RSkComponentFastImage.h",
+    "react/renderer/components/fastImage/ReactNativeFastImageShadowNode.cpp",
+    "react/renderer/components/fastImage/ReactNativeFastImageProps.cpp",
+    "react/renderer/components/fastImage/ReactNativeFastImageEventEmitter.cpp",
+  ]
+
+  # FastImage cpp sources
+  sources += [
+  ]
+
+  public_configs = [ ":LibFastImage_config" ]
+  deps = [
+    "//folly",
+    "//folly:async",
+    "//skia",
+    "//react-native/ReactCommon/react/renderer/core:core",
+   
+  ]
+
+  with_exceptions = true
+  with_rtti = true
+}
