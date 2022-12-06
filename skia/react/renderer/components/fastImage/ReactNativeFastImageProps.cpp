@@ -5,9 +5,10 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+#include <react/renderer/core/propsConversions.h>
+
 #include "ReactNativeFastImageProps.h"
 #include "conversions.h"
-#include <react/renderer/core/propsConversions.h>
 
 namespace facebook {
 namespace react {
@@ -24,7 +25,7 @@ ReactNativeFastImageProps::ReactNativeFastImageProps(const ReactNativeFastImageP
           rawProps,
           "resizeMode",
           sourceProps.resizeMode,
-          FastImageResizeMode::Stretch)),
+          ImageResizeMode::Stretch)),
       blurRadius(
           convertRawProp(rawProps, "blurRadius", sourceProps.blurRadius, {})),
       capInsets(

@@ -1,9 +1,9 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- */
+* Copyright (C) 1994-2022 OpenTV, Inc. and Nagravision S.A.
+*
+* This source code is licensed under the MIT license found in the
+* LICENSE file in the root directory of this source tree.
+*/
 
 #pragma once
 
@@ -35,13 +35,6 @@ class FastImageSource {
 };
 
 using FastImageSources = std::vector<FastImageSource>;
-
-enum class FastImageResizeMode {
-  Cover,
-  Contain,
-  Stretch,
-  Center,
-};
 
 } // namespace react
 } // namespace facebook

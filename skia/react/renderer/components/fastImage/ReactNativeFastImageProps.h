@@ -4,9 +4,13 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  */
+#pragma once
 
 #include <react/renderer/components/view/ViewProps.h>
+#include "react/renderer/components/image/ImageShadowNode.h"
+
 #include "external/react-native-fast-image/skia/react/renderer/fastImageManager/primitives.h"
+
 namespace facebook {
 namespace react {
 
@@ -20,7 +24,7 @@ class ReactNativeFastImageProps final : public ViewProps {
 
   const FastImageSources sources{};
   const FastImageSources defaultSources{};
-  const FastImageResizeMode resizeMode{FastImageResizeMode::Stretch};
+  const ImageResizeMode resizeMode{ImageResizeMode::Stretch};
   const Float blurRadius{};
   const EdgeInsets capInsets{};
   const SharedColor tintColor{};

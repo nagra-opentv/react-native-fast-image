@@ -5,16 +5,13 @@
 * LICENSE file in the root directory of this source tree.
 */
 
-#include "include/core/SkPaint.h"
-#include "include/core/SkClipOp.h"
-#include "include/core/SkImageFilter.h"
-#include "include/core/SkMaskFilter.h"
 #include "include/effects/SkImageFilters.h"
 #include "src/core/SkMaskFilterBase.h"
-#include "rns_shell/compositor/layers/PictureLayer.h"
-#include "RSkComponentFastImage.h"
+
 #include "ReactSkia/views/common/RSkImageUtils.h"
 #include "ReactSkia/views/common/RSkConversion.h"
+
+#include "RSkComponentFastImage.h"
 
 namespace facebook {
 namespace react {
@@ -78,7 +75,7 @@ void RSkComponentFastImage::OnPaint(SkCanvas *canvas) {
     if(hollowFrame) {
         //TODO: For the content Shadow, currently Shadow drawn for both Border[if avaialble] & Content[Image].
         //      This behaviour to be cross verified with reference.
-      drawContentShadow(canvas,frameRect,imageTargetRect,imageData,imageProps,layerRef->shadowOffset,layerRef->shadowColor,layerRef->shadowOpacity);
+      drawContentShadow(canvas,frameRect,imageTargetRect,imageData,imageProps.resizeMode,imageProps.blurRadius,layerRef->shadowOffset,layerRef->shadowColor,layerRef->shadowOpacity);
     }
     /*Draw Image */
     if(( frameRect.width() < imageTargetRect.width()) || ( frameRect.height() < imageTargetRect.height())) {
@@ -91,7 +88,7 @@ void RSkComponentFastImage::OnPaint(SkCanvas *canvas) {
     }
     /* TODO: Handle filter quality based of configuration. Setting Low Filter Quality as default for now*/
     paint.setFilterQuality(DEFAULT_IMAGE_FILTER_QUALITY);
-    setPaintFilters(paint,imageProps,imageTargetRect,frameRect,false,imageData->isOpaque());
+    setPaintFilters(paint,imageProps.resizeMode,imageProps.blurRadius,imageTargetRect,frameRect,false,imageData->isOpaque());
     canvas->drawImageRect(imageData,imageTargetRect,&paint);
     if(needClipAndRestore) {
       canvas->restore();
@@ -112,121 +109,6 @@ void RSkComponentFastImage::OnPaint(SkCanvas *canvas) {
       RNS_LOG_ERROR("Image not loaded :"<<imageProps.sources[0].uri.c_str());
     }
   }
-}
-
-void RSkComponentFastImage::drawAndSubmit() {
-  layer()->client().notifyFlushBegin();
-  layer()->invalidate( RnsShell::LayerPaintInvalidate);
-  if (layer()->type() == RnsShell::LAYER_TYPE_PICTURE) {
-    RNS_PROFILE_API_OFF(getComponentData().componentName << " getPicture :", static_cast<RnsShell::PictureLayer*>(layer().get())->setPicture(getPicture()));
-  }
-  layer()->client().notifyFlushRequired();
-}
-
-inline void RSkComponentFastImage::drawContentShadow( SkCanvas *canvas,
-                            SkRect frameRect,
-                            SkRect imageTargetRect,
-                            sk_sp<SkImage> imageData ,
-                            const ReactNativeFastImageProps  &imageProps,
-                            SkSize shadowOffset,
-                            SkColor shadowColor,
-                            float shadowOpacity){
-  /*TO DO :When Frame doesn't have background, has border with Jpeg Image and no resize.
-    currently drawing shadow for both border and content.
-    Need to cross verify with reference and confirm the behaviour.*/
-  SkRect shadowBounds;
-  SkIRect shadowFrame;
-  SkRect  frameBound;
-/*On below special cases, content Shadow to be drawn on complete frame/Layout instead on Image/content frame :
-  ------------------------------------------------------------------------------------------------------------
-   1. The target size of Image > Frame's size. In that case, clipping will be done to contain the image
-      within the frame, So shadow to be drawn conidering frame size.
-   2. For Repeat mode, Target frame size is the size of the frame itself.[Image will be repeated to fill the frame]
-*/
-  bool shadowOnFrame=(( frameRect.width() < imageTargetRect.width()) || ( frameRect.height() < imageTargetRect.height()));
-  if(shadowOnFrame) {
-    //Shadow on Frame Boundary
-    frameBound=frameRect;
-    shadowFrame.setXYWH(frameRect.x() + shadowOffset.width(), frameRect.y() + shadowOffset.height(), frameRect.width(), frameRect.height());
-  } else {
-    //Shadow on Image/Content Boundary
-    frameBound=imageTargetRect;
-    shadowFrame.setXYWH(imageTargetRect.x() + shadowOffset.width(), imageTargetRect.y() + shadowOffset.height(), imageTargetRect.width(), imageTargetRect.height());
-  }
-  SkIRect shadowIBounds=RSkDrawUtils::getShadowBounds(shadowFrame,layer()->shadowMaskFilter,layer()->shadowImageFilter);
-  shadowBounds=SkRect::Make(shadowIBounds);
-
-  bool saveLayerDone=false;
-//Apply Opacity
-  if(shadowOpacity) {
-    canvas->saveLayerAlpha(&shadowBounds,shadowOpacity);
-    saveLayerDone=true;
-  }
-
-  SkPaint shadowPaint;
-  setPaintFilters(shadowPaint,imageProps,imageTargetRect,frameRect,true,imageData->isOpaque());
-
-  if(!imageData->isOpaque() ) {
-//Apply Shadow for transparent image
-    canvas->drawImageRect(imageData, imageTargetRect, &shadowPaint);
-  } else {
-//Apply Shadow for opaque image
-    if(!saveLayerDone) {
-      canvas->saveLayer(&shadowBounds,&shadowPaint);
-      saveLayerDone =true;
-    }
-    // clipping done to avoid drawing on non visible area [Area under opque frame]
-    canvas->clipRect(frameBound,SkClipOp::kDifference);
-    shadowPaint.setColor(shadowColor);
-    canvas->drawIRect(shadowFrame, shadowPaint);
-  }
-  if(saveLayerDone) {
-    canvas->restore();
-  }
-#ifdef SHOW_SHADOW_BOUND
-  SkPaint paint;
-  paint.setStyle(SkPaint::kStroke_Style);
-  paint.setColor(SK_ColorGREEN);
-  paint.setStrokeWidth(2);
-  shadowBounds.join(frameBound);
-  canvas->drawRect(shadowBounds,paint);
-#endif
-}
-
-inline void RSkComponentFastImage::setPaintFilters (SkPaint &paintObj,const ReactNativeFastImageProps  &imageProps,
-                                                      SkRect imageTargetRect,SkRect frameRect ,
-                                                      bool  setFilterForShadow, bool opaqueImage) {
-  
-  //This function applies appropriate filter on paint to draw Shadow or Image.
-   /*  Image Filter will be used on below scenario :
-       -------------------------------------------
-      1. For shadow on Image with transparent pixel
-      2. For Image draw with Resize mide as "repeat"
-      3. For Image Draw with with blur Effect.
-   */
-  if((setFilterForShadow && !opaqueImage)||
-      (! setFilterForShadow &&
-         ((imageProps.blurRadius > 0))
-      )) {
-      sk_sp<SkImageFilter> shadowFilter{nullptr};
-      if(setFilterForShadow && (layer()->shadowImageFilter != nullptr) ) {
-         shadowFilter=layer()->shadowImageFilter;
-      }
-      if(imageProps.blurRadius > 0) {
-        shadowFilter = SkImageFilters::Blur(imageProps.blurRadius, imageProps.blurRadius,shadowFilter);
-      }
-      paintObj.setImageFilter(std::move(shadowFilter));
-   } else if(setFilterForShadow && (layer()->shadowMaskFilter != nullptr)) {
-      paintObj.setMaskFilter(layer()->shadowMaskFilter);
-  }
-}
-
-inline bool shouldCacheData(std::string cacheControlData) {
-  if(cacheControlData.find(RNS_NO_CACHE_STR) != std::string::npos) return false;
-  else if(cacheControlData.find(RNS_NO_STORE_STR) != std::string::npos) return false;
-  else if(cacheControlData.find(RNS_MAX_AGE_0_STR) != std::string::npos) return false;
-
-  return true;
 }
 
 RnsShell::LayerInvalidateMask RSkComponentFastImage::updateComponentProps(const ShadowView &newShadowView,bool forceUpdate) {
@@ -250,7 +132,7 @@ RnsShell::LayerInvalidateMask RSkComponentFastImage::updateComponentProps(const 
     }
     return updateMask;
 }
-
+// To Do : For event, duplicating the code for success and error event.
  void RSkComponentFastImage::sendErrorEvents() {
    imageEventEmitter_->onError();
    imageEventEmitter_->onLoadEnd();

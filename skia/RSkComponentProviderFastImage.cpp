@@ -5,9 +5,9 @@
  * found in the LICENSE file.
  */
 
-#include "external/react-native-fast-image/skia/RSkComponentProviderFastImage.h"
-#include "external/react-native-fast-image/skia/RSkComponentFastImage.h"
-#include "external/react-native-fast-image/skia/react/renderer/components/fastImage/ReactNativeFastImageDescriptor.h"
+#include "RSkComponentProviderFastImage.h"
+#include "RSkComponentFastImage.h"
+#include "react/renderer/components/fastImage/ReactNativeFastImageDescriptor.h"
 
 namespace facebook {
 namespace react {

@@ -1,9 +1,9 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- */
+* Copyright (C) 1994-2022 OpenTV, Inc. and Nagravision S.A.
+*
+* This source code is licensed under the MIT license found in the
+* LICENSE file in the root directory of this source tree.
+*/
 
 #pragma once
 
@@ -87,38 +87,44 @@ inline std::string toString(const FastImageSource &value) {
   return "{uri: " + value.uri + "}";
 }
 
-inline void fromRawValue(const RawValue &value, FastImageResizeMode &result) {
+inline void fromRawValue(const RawValue &value, ImageResizeMode &result) {
   assert(value.hasType<std::string>());
   auto stringValue = (std::string)value;
   if (stringValue == "cover") {
-    result = FastImageResizeMode::Cover;
+    result = ImageResizeMode::Cover;
     return;
   }
   if (stringValue == "contain") {
-    result = FastImageResizeMode::Contain;
+    result = ImageResizeMode::Contain;
     return;
   }
   if (stringValue == "stretch") {
-    result = FastImageResizeMode::Stretch;
+    result = ImageResizeMode::Stretch;
     return;
   }
   if (stringValue == "center") {
-    result = FastImageResizeMode::Center;
+    result = ImageResizeMode::Center;
+    return;
+  }
+  if (stringValue == "repeat") {
+    result = ImageResizeMode::Repeat;
     return;
   }
   abort();
 }
 
-inline std::string toString(const FastImageResizeMode &value) {
+inline std::string toString(const ImageResizeMode &value) {
   switch (value) {
-    case FastImageResizeMode::Cover:
+    case ImageResizeMode::Cover:
       return "cover";
-    case FastImageResizeMode::Contain:
+    case ImageResizeMode::Contain:
       return "contain";
-    case FastImageResizeMode::Stretch:
+    case ImageResizeMode::Stretch:
       return "stretch";
-    case FastImageResizeMode::Center:
+    case ImageResizeMode::Center:
       return "center";
+    case ImageResizeMode::Repeat:
+      return "repeat";
   }
 }
 
