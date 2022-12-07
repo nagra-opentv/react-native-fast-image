@@ -1,9 +1,9 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- */
+* Copyright (C) 1994-2022 OpenTV, Inc. and Nagravision S.A.
+*
+* This source code is licensed under the MIT license found in the
+* LICENSE file in the root directory of this source tree.
+*/
 
 #pragma once
 
@@ -17,7 +17,7 @@ class FastImageEventEmitter : public ViewEventEmitter {
   using ViewEventEmitter::ViewEventEmitter;
 
   void onLoadStart() const;
-  void onLoad() const;
+  void onLoad(Size) const;
   void onLoadEnd() const;
   void onProgress(double) const;
   void onError() const;

@@ -140,7 +140,8 @@ RnsShell::LayerInvalidateMask RSkComponentFastImage::updateComponentProps(const 
  }
 
 void RSkComponentFastImage::sendSuccessEvents() {
-   imageEventEmitter_->onLoad();
+   auto component = getComponentData();
+   imageEventEmitter_->onLoad(component.layoutMetrics.frame.size);
    imageEventEmitter_->onLoadEnd();
    hasToTriggerEvent_ = false;
  }
