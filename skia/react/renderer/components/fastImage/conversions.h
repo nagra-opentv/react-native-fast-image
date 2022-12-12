@@ -11,47 +11,14 @@
 #include <folly/dynamic.h>
 #include <react/renderer/graphics/conversions.h>
 #include "external/react-native-fast-image/skia/react/renderer/fastImageManager/primitives.h"
-
 namespace facebook {
 namespace react {
 
 inline void fromRawValue(const RawValue &value, FastImageSource &result) {
-  if (value.hasType<std::string>()) {
-    result = {
-        /* .type = */ FastImageSource::Type::Remote,
-        /* .uri = */ (std::string)value,
-    };
-    return;
-  }
 
-  if (value.hasType<better::map<std::string, RawValue>>()) {
+   if (value.hasType<better::map<std::string, RawValue>>()) {
     auto items = (better::map<std::string, RawValue>)value;
     result = {};
-
-    result.type = FastImageSource::Type::Remote;
-
-    if (items.find("__packager_asset") != items.end()) {
-      result.type = FastImageSource::Type::Local;
-    }
-
-    if (items.find("width") != items.end() &&
-        items.find("height") != items.end() &&
-        // The following checks have to be removed after codegen is shipped.
-        // See T45151459.
-        items.at("width").hasType<Float>() &&
-        items.at("height").hasType<Float>()) {
-      result.size = {(Float)items.at("width"), (Float)items.at("height")};
-    }
-
-    if (items.find("scale") != items.end() &&
-        // The following checks have to be removed after codegen is shipped.
-        // See T45151459.
-        items.at("scale").hasType<Float>()) {
-      result.scale = (Float)items.at("scale");
-    } else {
-      result.scale = items.find("deprecated") != items.end() ? 0.0 : 1.0;
-    }
-
     if (items.find("url") != items.end() &&
         // The following should be removed after codegen is shipped.
         // See T45151459.
@@ -66,66 +33,35 @@ inline void fromRawValue(const RawValue &value, FastImageSource &result) {
       result.uri = (std::string)items.at("uri");
     }
 
-    if (items.find("bundle") != items.end() &&
-        // The following should be removed after codegen is shipped.
-        // See T45151459.
-        items.at("bundle").hasType<std::string>()) {
-      result.bundle = (std::string)items.at("bundle");
-      result.type = FastImageSource::Type::Local;
+    if (items.find("priority") != items.end() &&
+      items.at("priority").hasType<std::string>()) {
+      auto stringValue = (std::string)items.at("priority");
+      if(stringValue == "low") {
+        result.priority = FastImageSource::Priority::low;
+      } else if (stringValue == "normal") {
+        result.priority = FastImageSource::Priority::normal;
+      }else if (stringValue == "high") {
+        result.priority = FastImageSource::Priority::high;
+      }
     }
 
+    if (items.find("cache") != items.end() &&
+      items.at("cache").hasType<std::string>()) {
+      auto stringValue = (std::string)items.at("cache");
+      if(stringValue == "immutable") {
+        result.cache = FastImageSource::Cache::immutable;
+      } else if (stringValue == "web") {
+        result.cache = FastImageSource::Cache::web;
+      }else if (stringValue == "cacheOnly") {
+        result.cache = FastImageSource::Cache::cacheOnly;
+      }
+    }
     return;
   }
 
   // The following should be removed after codegen is shipped.
   // See T45151459.
   result = {};
-  result.type = FastImageSource::Type::Invalid;
-}
-
-inline std::string toString(const FastImageSource &value) {
-  return "{uri: " + value.uri + "}";
-}
-
-inline void fromRawValue(const RawValue &value, ImageResizeMode &result) {
-  assert(value.hasType<std::string>());
-  auto stringValue = (std::string)value;
-  if (stringValue == "cover") {
-    result = ImageResizeMode::Cover;
-    return;
-  }
-  if (stringValue == "contain") {
-    result = ImageResizeMode::Contain;
-    return;
-  }
-  if (stringValue == "stretch") {
-    result = ImageResizeMode::Stretch;
-    return;
-  }
-  if (stringValue == "center") {
-    result = ImageResizeMode::Center;
-    return;
-  }
-  if (stringValue == "repeat") {
-    result = ImageResizeMode::Repeat;
-    return;
-  }
-  abort();
-}
-
-inline std::string toString(const ImageResizeMode &value) {
-  switch (value) {
-    case ImageResizeMode::Cover:
-      return "cover";
-    case ImageResizeMode::Contain:
-      return "contain";
-    case ImageResizeMode::Stretch:
-      return "stretch";
-    case ImageResizeMode::Center:
-      return "center";
-    case ImageResizeMode::Repeat:
-      return "repeat";
-  }
 }
 
 } // namespace react

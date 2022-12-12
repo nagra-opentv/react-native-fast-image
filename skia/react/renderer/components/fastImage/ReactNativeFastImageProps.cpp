@@ -8,6 +8,7 @@
 #include <react/renderer/core/propsConversions.h>
 
 #include "ReactNativeFastImageProps.h"
+#include <react/renderer/components/image/conversions.h>
 #include "conversions.h"
 
 namespace facebook {
@@ -26,17 +27,9 @@ ReactNativeFastImageProps::ReactNativeFastImageProps(const ReactNativeFastImageP
           "resizeMode",
           sourceProps.resizeMode,
           ImageResizeMode::Stretch)),
-      blurRadius(
-          convertRawProp(rawProps, "blurRadius", sourceProps.blurRadius, {})),
-      capInsets(
-          convertRawProp(rawProps, "capInsets", sourceProps.capInsets, {})),
       tintColor(
-          convertRawProp(rawProps, "tintColor", sourceProps.tintColor, {})),
-      internal_analyticTag(convertRawProp(
-          rawProps,
-          "internal_analyticTag",
-          sourceProps.internal_analyticTag,
-          {})) {}
+          convertRawProp(rawProps, "tintColor", sourceProps.tintColor, {}))
+           {}
 
 } // namespace react
 } // namespace facebook

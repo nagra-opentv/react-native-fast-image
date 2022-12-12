@@ -17,21 +17,12 @@ namespace react {
 
 class FastImageSource {
  public:
-  enum class Type { Invalid, Remote, Local };
-
-  Type type{};
+  enum class Priority { low, normal, high };
+  enum class Cache { immutable, web, cacheOnly };
   std::string uri{};
-  std::string bundle{};
-  Float scale{3};
-  Size size{0};
+  Priority priority{};
+  Cache cache{};
 
-  bool operator==(const FastImageSource &rhs) const {
-    return std::tie(this->type, this->uri,this->size) == std::tie(rhs.type, rhs.uri,rhs.size);
-  }
-
-  bool operator!=(const FastImageSource &rhs) const {
-    return !(*this == rhs);
-  }
 };
 
 using FastImageSources = std::vector<FastImageSource>;

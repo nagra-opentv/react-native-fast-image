@@ -17,7 +17,7 @@ class ReactNativeFastImageState final {
  public:
   ReactNativeFastImageState() {}
   /*
-   * Returns stored ImageSource object.
+   * Returns stored fastImageSource object.
    */
   FastImageSource getImageSource() const;
 

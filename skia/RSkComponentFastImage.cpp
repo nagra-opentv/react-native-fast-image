@@ -37,13 +37,12 @@ void RSkComponentFastImage::OnPaint(SkCanvas *canvas) {
     if(imageProps.sources.empty()) break;
     imageData = RSkImageCacheManager::getImageCacheManagerInstance()->findImageDataInCache(imageProps.sources[0].uri.c_str());
     if(imageData) break;
-    if (imageProps.sources[0].type == FastImageSource::Type::Local) {
+      if(imageProps.sources[0].uri.substr(0, 14) == "file://assets/") {
       imageData = getLocalImageData(imageProps.sources[0].uri.c_str());
-    } else if(imageProps.sources[0].type == FastImageSource::Type::Remote) {
-      requestNetworkImageData(imageProps.sources[0].uri.c_str());
+    } else if((imageProps.sources[0].uri.substr(0, 7) == "http://") || (imageProps.sources[0].uri.substr(0, 8) == "https://")) {
+      requestNetworkImageData(imageProps.sources[0].uri);
     }
   } while(0);
-
   Rect frame = component.layoutMetrics.frame;
   SkRect frameRect = SkRect::MakeXYWH(frame.origin.x, frame.origin.y, frame.size.width, frame.size.height);
   auto const &imageBorderMetrics=imageProps.resolveBorderMetrics(component.layoutMetrics);
@@ -67,16 +66,6 @@ void RSkComponentFastImage::OnPaint(SkCanvas *canvas) {
   if(imageData) {
     SkRect imageTargetRect = computeTargetRect({imageData->width(),imageData->height()},frameRect,imageProps.resizeMode);
     SkPaint paint;
-    /*Draw Image Shadow on below scenario:
-      ------------------------------------
-      1. Has visible shadow. but both border & background not avialble [case of ShadowDrawnMode::ShadowOnContent]
-      2. Shadow Drawn on Border[case of ShadowDrawnMode::ShadowOnBorder], But Image is either transparent  or smaller than the same
-    */
-    if(hollowFrame) {
-        //TODO: For the content Shadow, currently Shadow drawn for both Border[if avaialble] & Content[Image].
-        //      This behaviour to be cross verified with reference.
-      drawContentShadow(canvas,frameRect,imageTargetRect,imageData,imageProps.resizeMode,imageProps.blurRadius,layerRef->shadowOffset,layerRef->shadowColor,layerRef->shadowOpacity);
-    }
     /*Draw Image */
     if(( frameRect.width() < imageTargetRect.width()) || ( frameRect.height() < imageTargetRect.height())) {
       needClipAndRestore= true;
@@ -88,7 +77,6 @@ void RSkComponentFastImage::OnPaint(SkCanvas *canvas) {
     }
     /* TODO: Handle filter quality based of configuration. Setting Low Filter Quality as default for now*/
     paint.setFilterQuality(DEFAULT_IMAGE_FILTER_QUALITY);
-    setPaintFilters(paint,imageProps.resizeMode,imageProps.blurRadius,imageTargetRect,frameRect,false,imageData->isOpaque());
     canvas->drawImageRect(imageData,imageTargetRect,&paint);
     if(needClipAndRestore) {
       canvas->restore();
@@ -100,7 +88,7 @@ void RSkComponentFastImage::OnPaint(SkCanvas *canvas) {
 
   } else {
   /* Emitting Image Load failed Event*/
-    if(imageProps.sources[0].type != FastImageSource::Type::Remote) {
+     if(!(imageProps.sources[0].uri.substr(0, 7) == "http://" || (imageProps.sources[0].uri.substr(0, 8) == "https://"))) {
       if(!hasToTriggerEvent_) {
         imageEventEmitter_->onLoadStart();
         hasToTriggerEvent_ = true;
@@ -132,6 +120,42 @@ RnsShell::LayerInvalidateMask RSkComponentFastImage::updateComponentProps(const 
     }
     return updateMask;
 }
+
+// To Do : For event, duplicating code for processing image data.
+bool RSkComponentFastImage::processImageData(const char* path, char* response, int size) {
+  auto component = getComponentData();
+  auto const &imageProps = *std::static_pointer_cast<ReactNativeFastImageProps const>(component.props);
+  /* Responce callback from network. Get image data, insert in Cache and call Onpaint*/
+  sk_sp<SkImage> remoteImageData = RSkImageCacheManager::getImageCacheManagerInstance()->findImageDataInCache(path);
+  if(remoteImageData ) {
+    if(strcmp(path,imageProps.sources[0].uri.c_str()) == 0) {
+      drawAndSubmit();
+    }
+  } else {
+    if(!response) return false;
+    sk_sp<SkData> data = SkData::MakeWithCopy(response,size);
+    if (!data){
+      RNS_LOG_ERROR("Unable to make SkData for path : " << path);
+      return false;
+    }
+    remoteImageData = SkImage::MakeFromEncoded(data);
+    if(!remoteImageData) return false;
+
+    //Add in cache if image data is valid
+    if(remoteImageData && canCacheData_){
+      decodedimageCacheData imageCacheData;
+      imageCacheData.imageData = remoteImageData;
+      imageCacheData.expiryTime = (SkTime::GetMSecs() + cacheExpiryTime_);//convert sec to milisecond 60 *1000
+      RSkImageCacheManager::getImageCacheManagerInstance()->imageDataInsertInCache(path, imageCacheData);
+    }
+    if(strcmp(path,imageProps.sources[0].uri.c_str()) == 0){
+      networkImageData_ = remoteImageData;
+      drawAndSubmit();
+    }
+  }
+  return true;
+}
+
 // To Do : For event, duplicating the code for success and error event.
  void RSkComponentFastImage::sendErrorEvents() {
    imageEventEmitter_->onError();

@@ -25,10 +25,7 @@ class ReactNativeFastImageProps final : public ViewProps {
   const FastImageSources sources{};
   const FastImageSources defaultSources{};
   const ImageResizeMode resizeMode{ImageResizeMode::Stretch};
-  const Float blurRadius{};
-  const EdgeInsets capInsets{};
   const SharedColor tintColor{};
-  const std::string internal_analyticTag{};
 };
 
 } // namespace react
