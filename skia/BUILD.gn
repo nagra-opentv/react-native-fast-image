@@ -1,0 +1,35 @@
+# Device info
+
+import("//react-native/common.gni")
+
+config("LibRSFastImageModule_config") {
+  cflags_cc = [ "-std=c++17"]
+  cflags_cc += [
+    "-Wno-extra-semi",
+    "-Wno-sign-compare",
+    "-Wno-header-hygiene",
+  ]
+
+  include_dirs = [ ".",
+                  "//react-native/ReactCommon/",
+                ]
+}
+
+rn_cxx_component("RSFastImage") {
+
+  # RS Native module and its dependencies
+  sources = [
+    "RSFastImageModule.h",
+    "RSFastImageModule.cpp",
+  ]
+
+  public_configs = [ ":LibRSFastImageModule_config" ]
+  public_configs += [ "//build/secondary/folly:folly_config" ]
+  deps = [
+    "//folly",
+    "//skia",
+  ]
+
+  with_exceptions = true
+  with_rtti = true
+}
