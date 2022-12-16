@@ -7,7 +7,7 @@
 #pragma once
 
 #include "ReactSkia/components/RSkComponentImage.h"
-#include "ReactSkia/views/common/RSkImageCacheManager.h"
+//#include "ReactSkia/views/common/RSkImageCacheManager.h"
 #include "react/renderer/components/fastImage/ReactNativeFastImageShadowNode.h"
 
 namespace facebook {
@@ -27,10 +27,10 @@ class RSkComponentFastImage final : public RSkComponentImage {
    FastImgProps imageProps;
    std::shared_ptr<FastImageEventEmitter const> imageEventEmitter_;
    sk_sp<SkImage> networkImageData_{nullptr};
-   bool processImageData(const char* path, char* response, int size) override;
    void sendErrorEvents() override;
    void sendSuccessEvents() override;
  protected:
+     bool processImageData(const char* path, char* response, int size) override;
    void OnPaint(SkCanvas *canvas) override;
 };
 

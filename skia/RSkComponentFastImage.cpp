@@ -35,6 +35,7 @@ void RSkComponentFastImage::OnPaint(SkCanvas *canvas) {
       break;
     }
     if(imageProps.sources.empty()) break;
+
     imageData = RSkImageCacheManager::getImageCacheManagerInstance()->findImageDataInCache(imageProps.sources[0].uri.c_str());
     if(imageData) break;
       if(imageProps.sources[0].uri.substr(0, 14) == "file://assets/") {
@@ -123,6 +124,7 @@ RnsShell::LayerInvalidateMask RSkComponentFastImage::updateComponentProps(const 
 
 // To Do : For event, duplicating code for processing image data.
 bool RSkComponentFastImage::processImageData(const char* path, char* response, int size) {
+  decodedimageCacheData imageCacheData;
   auto component = getComponentData();
   auto const &imageProps = *std::static_pointer_cast<ReactNativeFastImageProps const>(component.props);
   /* Responce callback from network. Get image data, insert in Cache and call Onpaint*/
@@ -140,14 +142,13 @@ bool RSkComponentFastImage::processImageData(const char* path, char* response, i
     }
     remoteImageData = SkImage::MakeFromEncoded(data);
     if(!remoteImageData) return false;
-
     //Add in cache if image data is valid
     if(remoteImageData && canCacheData_){
-      decodedimageCacheData imageCacheData;
       imageCacheData.imageData = remoteImageData;
       imageCacheData.expiryTime = (SkTime::GetMSecs() + cacheExpiryTime_);//convert sec to milisecond 60 *1000
       RSkImageCacheManager::getImageCacheManagerInstance()->imageDataInsertInCache(path, imageCacheData);
     }
+
     if(strcmp(path,imageProps.sources[0].uri.c_str()) == 0){
       networkImageData_ = remoteImageData;
       drawAndSubmit();

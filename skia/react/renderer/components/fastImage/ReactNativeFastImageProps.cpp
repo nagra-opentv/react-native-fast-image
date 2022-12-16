@@ -9,7 +9,7 @@
 
 #include "ReactNativeFastImageProps.h"
 #include <react/renderer/components/image/conversions.h>
-#include "conversions.h"
+#include "react/renderer/components/fastImage/conversions.h"
 
 namespace facebook {
 namespace react {
