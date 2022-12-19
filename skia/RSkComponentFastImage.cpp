@@ -10,6 +10,7 @@
 
 #include "ReactSkia/views/common/RSkImageUtils.h"
 #include "ReactSkia/views/common/RSkConversion.h"
+#include "ReactSkia/sdk/CurlNetworking.h"
 
 #include "RSkComponentFastImage.h"
 
@@ -121,7 +122,7 @@ RnsShell::LayerInvalidateMask RSkComponentFastImage::updateComponentProps(const 
     return updateMask;
 }
 
-// To Do : For event, duplicating code for processing image data.
+// To Do : For event, duplicating code for processing image data.In future will be remove.
 bool RSkComponentFastImage::processImageData(const char* path, char* response, int size) {
   auto component = getComponentData();
   auto const &imageProps = *std::static_pointer_cast<ReactNativeFastImageProps const>(component.props);
@@ -143,9 +144,9 @@ bool RSkComponentFastImage::processImageData(const char* path, char* response, i
 
     //Add in cache if image data is valid
     if(remoteImageData && canCacheData_){
-      decodedimageCacheData imageCacheData;
-      imageCacheData.imageData = remoteImageData;
-      imageCacheData.expiryTime = (SkTime::GetMSecs() + cacheExpiryTime_);//convert sec to milisecond 60 *1000
+      std::shared_ptr<decodedimageCacheData> imageCacheData = std::make_shared<decodedimageCacheData>();
+      imageCacheData->imageData = remoteImageData;
+      imageCacheData->expiryTime = (SkTime::GetMSecs() + cacheExpiryTime_);//convert sec to milisecond 60 *1000
       RSkImageCacheManager::getImageCacheManagerInstance()->imageDataInsertInCache(path, imageCacheData);
     }
     if(strcmp(path,imageProps.sources[0].uri.c_str()) == 0){
@@ -156,7 +157,80 @@ bool RSkComponentFastImage::processImageData(const char* path, char* response, i
   return true;
 }
 
-// To Do : For event, duplicating the code for success and error event.
+inline bool shouldCacheData(std::string cacheControlData) {
+  if(cacheControlData.find(RNS_NO_CACHE_STR) != std::string::npos) return false;
+  else if(cacheControlData.find(RNS_NO_STORE_STR) != std::string::npos) return false;
+  else if(cacheControlData.find(RNS_MAX_AGE_0_STR) != std::string::npos) return false;
+
+  return true;
+}
+
+inline double getCacheMaxAgeDuration(std::string cacheControlData) {
+  size_t maxAgePos = cacheControlData.find(RNS_MAX_AGE_STR);
+  if(maxAgePos != std::string::npos) {
+    size_t maxAgeEndPos = cacheControlData.find(';',maxAgePos);
+    return std::stoi(cacheControlData.substr(maxAgePos+8,maxAgeEndPos));
+  }
+  return DEFAULT_MAX_CACHE_EXPIRY_TIME;
+}
+
+// To Do : For event, duplicating code for requesting network image data.In future will be remove.
+void RSkComponentFastImage::requestNetworkImageData(std::string uri) {
+  auto sharedCurlNetworking = CurlNetworking::sharedCurlNetworking();
+  std::shared_ptr<CurlRequest> remoteCurlRequest = std::make_shared<CurlRequest>(nullptr,uri,0,"GET");
+  folly::dynamic query = folly::dynamic::object();
+
+  //Before network request, reset the cache info with default values
+  canCacheData_ = true;
+  cacheExpiryTime_ = DEFAULT_MAX_CACHE_EXPIRY_TIME;
+
+  // headercallback lambda fuction
+  auto headerCallback =  [this, remoteCurlRequest](void* curlresponseData,void *userdata)->bool {
+    CurlResponse *responseData =  (CurlResponse *)curlresponseData;
+    CurlRequest *curlRequest = (CurlRequest *) userdata;
+
+    double responseMaxAgeTime = DEFAULT_MAX_CACHE_EXPIRY_TIME;
+    // Parse server response headers and retrieve caching details
+    auto responseCacheControlData = responseData->headerBuffer.find("Cache-Control");
+    if(responseCacheControlData != responseData->headerBuffer.items().end()) {
+      std::string responseCacheControlString = responseCacheControlData->second.asString();
+      canCacheData_ = shouldCacheData(responseCacheControlString);
+      if(canCacheData_) responseMaxAgeTime = getCacheMaxAgeDuration(responseCacheControlString);
+    }
+
+    // TODO : Parse request headers and retrieve caching details
+
+    cacheExpiryTime_ = std::min(responseMaxAgeTime,static_cast<double>(DEFAULT_MAX_CACHE_EXPIRY_TIME));
+    RNS_LOG_DEBUG("url [" << curlRequest->URL.c_str() << "] canCacheData[" << canCacheData_ << "] cacheExpiryTime[" << cacheExpiryTime_ << "]");
+    return 0;
+  };
+
+
+  // completioncallback lambda fuction
+  auto completionCallback =  [this, remoteCurlRequest](void* curlresponseData,void *userdata)->bool {
+    CurlResponse *responseData =  (CurlResponse *)curlresponseData;
+    CurlRequest * curlRequest = (CurlRequest *) userdata;
+    if((!responseData
+        || !processImageData(curlRequest->URL.c_str(),responseData->responseBuffer,responseData->contentSize)) && (hasToTriggerEvent_)) {
+      this->sendErrorEvents();
+    }
+    //Reset the lamda callback so that curlRequest shared pointer dereffered from the lamda
+    // and gets auto destructored after the completion callback.
+    remoteCurlRequest->curldelegator.CURLNetworkingHeaderCallback = nullptr;
+    remoteCurlRequest->curldelegator.CURLNetworkingCompletionCallback = nullptr;
+    return 0;
+  };
+
+  remoteCurlRequest->curldelegator.delegatorData = remoteCurlRequest.get();
+  remoteCurlRequest->curldelegator.CURLNetworkingHeaderCallback = headerCallback;
+  remoteCurlRequest->curldelegator.CURLNetworkingCompletionCallback=completionCallback;
+  if(!hasToTriggerEvent_) {
+    this->imageEventEmitter_->onLoadStart();
+    hasToTriggerEvent_ = true;
+  }
+  sharedCurlNetworking->sendRequest(remoteCurlRequest,query);
+}
+// To Do : For event, duplicating the code for success and error event.In future will be remove.
  void RSkComponentFastImage::sendErrorEvents() {
    imageEventEmitter_->onError();
    imageEventEmitter_->onLoadEnd();

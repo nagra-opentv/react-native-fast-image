@@ -28,6 +28,7 @@ class RSkComponentFastImage final : public RSkComponentImage {
    std::shared_ptr<FastImageEventEmitter const> imageEventEmitter_;
    sk_sp<SkImage> networkImageData_{nullptr};
    bool processImageData(const char* path, char* response, int size) override;
+   void requestNetworkImageData(std::string uri);
    void sendErrorEvents() override;
    void sendSuccessEvents() override;
  protected:

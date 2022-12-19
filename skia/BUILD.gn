@@ -26,6 +26,8 @@ rn_cxx_component("fastImage") {
 
   # RNS Native module and its dependencies
   sources = [
+     "RSFastImageModule.h",
+     "RSFastImageModule.cpp",
   ]
 
   # RNS Fabric Component and its dependencies
@@ -44,6 +46,7 @@ rn_cxx_component("fastImage") {
   ]
 
   public_configs = [ ":LibFastImage_config" ]
+  public_configs += [ "//build/secondary/folly:folly_config" ]
   deps = [
     "//folly",
     "//folly:async",
