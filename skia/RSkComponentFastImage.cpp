@@ -1,29 +1,37 @@
 /*
 * Copyright (C) 1994-2022 OpenTV, Inc. and Nagravision S.A.
+* Copyright (C) Kudo Chien
 *
 * This source code is licensed under the MIT license found in the
 * LICENSE file in the root directory of this source tree.
 */
 
+/*
+  Right now FastImage is duplicate of Image component.
+  This can be avoided buy inheritance . But when we did so faced
+  random crashes which was difficult to triage.
+  Hence for now we have implemented this component as duplicate to Image component.
+*/
+
 #include "include/effects/SkImageFilters.h"
 #include "src/core/SkMaskFilterBase.h"
 
+#include "rns_shell/compositor/layers/PictureLayer.h"
+
 #include "ReactSkia/views/common/RSkImageUtils.h"
 #include "ReactSkia/views/common/RSkConversion.h"
-
-#include "rns_shell/compositor/layers/PictureLayer.h"
+#include "ReactSkia/utils/RnsUtils.h"
 #include "RSkComponentFastImage.h"
 
 namespace facebook {
 namespace react {
 
 using namespace RSkImageUtils;
+
 RSkComponentFastImage::RSkComponentFastImage(const ShadowView &shadowView)
-  : RSkComponent(shadowView) {
-       imageEventEmitter_ = std::static_pointer_cast<FastImageViewEventEmitter const>(shadowView.eventEmitter);
-       networkImageData_= nullptr;
+    : RSkComponent(shadowView) {
+      imageEventEmitter_ = std::static_pointer_cast<FastImageViewEventEmitter const>(shadowView.eventEmitter);
 }
-RSkComponentFastImage::~RSkComponentFastImage(){};
 
 void RSkComponentFastImage::OnPaint(SkCanvas *canvas) {
   sk_sp<SkImage> imageData{nullptr};
@@ -33,18 +41,20 @@ void RSkComponentFastImage::OnPaint(SkCanvas *canvas) {
   //First to check file entry presence. If not exist, generate imageData.
   do {
     if(networkImageData_) {
-        imageData = networkImageData_;
+      imageData = networkImageData_;
       break;
     }
     if(imageProps.source.uri.empty()) break;
     imageData = RSkImageCacheManager::getImageCacheManagerInstance()->findImageDataInCache(imageProps.source.uri.c_str());
     if(imageData) break;
-      if(imageProps.source.uri.substr(0, 14) == "file://assets/") {
-      imageData = getLocalImageData(imageProps.source.uri.c_str());
+
+    if(imageProps.source.uri.substr(0, 14) == "file://assets/") {
+      imageData = getLocalImageData(imageProps.source.uri);
     } else if((imageProps.source.uri.substr(0, 7) == "http://") || (imageProps.source.uri.substr(0, 8) == "https://")) {
       requestNetworkImageData(imageProps.source.uri);
     }
   } while(0);
+
   Rect frame = component.layoutMetrics.frame;
   SkRect frameRect = SkRect::MakeXYWH(frame.origin.x, frame.origin.y, frame.size.width, frame.size.height);
   auto const &imageBorderMetrics=imageProps.resolveBorderMetrics(component.layoutMetrics);
@@ -54,7 +64,7 @@ void RSkComponentFastImage::OnPaint(SkCanvas *canvas) {
   bool needClipAndRestore =false;
   sk_sp<SkImageFilter> imageFilter;
   auto  layerRef=layer();
-  if(layer()->isShadowVisible) {
+  if(layerRef->isShadowVisible) {
     /*Draw Shadow on Frame*/
     hollowFrame=drawShadow(canvas,frame,imageBorderMetrics,
                               imageProps.backgroundColor,
@@ -68,6 +78,7 @@ void RSkComponentFastImage::OnPaint(SkCanvas *canvas) {
   if(imageData) {
     SkRect imageTargetRect = computeTargetRect({imageData->width(),imageData->height()},frameRect,ImageResizeMode::Cover);
     SkPaint paint;
+
     /*Draw Image */
     if(( frameRect.width() < imageTargetRect.width()) || ( frameRect.height() < imageTargetRect.height())) {
       needClipAndRestore= true;
@@ -102,6 +113,7 @@ void RSkComponentFastImage::OnPaint(SkCanvas *canvas) {
   }
 }
 
+
 sk_sp<SkImage> RSkComponentFastImage::getLocalImageData(string sourceUri) {
   sk_sp<SkImage> imageData{nullptr};
   sk_sp<SkData> data;
@@ -125,7 +137,7 @@ sk_sp<SkImage> RSkComponentFastImage::getLocalImageData(string sourceUri) {
     RSkImageCacheManager::getImageCacheManagerInstance()->imageDataInsertInCache(sourceUri.c_str(), imageCacheData);
   }
   if(!hasToTriggerEvent_) {
-     imageEventEmitter_->onFastImageLoadStart(imagestart);
+    imageEventEmitter_->onFastImageLoadStart(imagestart);
     hasToTriggerEvent_ = true;
   }
 
@@ -143,33 +155,33 @@ inline string RSkComponentFastImage::generateUriPath(string path) {
 
 RnsShell::LayerInvalidateMask RSkComponentFastImage::updateComponentProps(SharedProps newviewProps,bool forceUpdate) {
 
-  auto const &newimageProps = *std::static_pointer_cast<FastImageViewProps const>(newviewProps);
-  auto component = getComponentData();
-  auto const &oldimageProps = *std::static_pointer_cast<FastImageViewProps const>(component.props);
-  RnsShell::LayerInvalidateMask updateMask=RnsShell::LayerInvalidateNone;
-  FastImageViewEventEmitter::OnFastImageLoadStart imagestart;
+    auto const &newimageProps = *std::static_pointer_cast<FastImageViewProps const>(newviewProps);
+    auto component = getComponentData();
+    auto const &oldimageProps = *std::static_pointer_cast<FastImageViewProps const>(component.props);
+    RnsShell::LayerInvalidateMask updateMask=RnsShell::LayerInvalidateNone;
+    FastImageViewEventEmitter::OnFastImageLoadStart imagestart;
 
-  if((forceUpdate) || (oldimageProps.resizeMode != newimageProps.resizeMode)) {
-    imageProps.resizeMode = newimageProps.resizeMode;
-    updateMask =static_cast<RnsShell::LayerInvalidateMask>(updateMask | RnsShell::LayerInvalidateAll);
-  }
-  if((forceUpdate) || (oldimageProps.tintColor != newimageProps.tintColor )) {
-    /* TODO : Needs implementation*/
-    imageProps.tintColor = RSkColorFromSharedColor(newimageProps.tintColor,SK_ColorTRANSPARENT);
-  }
-  if((forceUpdate) || (oldimageProps.source.uri.compare(newimageProps.source.uri) != 0)) {
-    if( isRequestInProgress_ && remoteCurlRequest_){
-      // if url is changed, image component is get component property update.
-      // cancel the onging request and made new request to network.  
-      CurlNetworking::sharedCurlNetworking()->abortRequest(remoteCurlRequest_);
-      remoteCurlRequest_ = nullptr;
-      //TODO - need to send the onEnd event to APP if it is abort.
-      isRequestInProgress_=false;
+    if((forceUpdate) || (oldimageProps.resizeMode != newimageProps.resizeMode)) {
+      imageProps.resizeMode = newimageProps.resizeMode;
+      updateMask =static_cast<RnsShell::LayerInvalidateMask>(updateMask | RnsShell::LayerInvalidateAll);
     }
-     imageEventEmitter_->onFastImageLoadStart(imagestart);
-    hasToTriggerEvent_ = true;
-  }
-  return updateMask;
+    if((forceUpdate) || (oldimageProps.tintColor != newimageProps.tintColor )) {
+      /* TODO : Needs implementation*/
+      imageProps.tintColor = RSkColorFromSharedColor(newimageProps.tintColor,SK_ColorTRANSPARENT);
+    }
+    if((forceUpdate) || (oldimageProps.source.uri.compare(newimageProps.source.uri) != 0)) {
+      if( isRequestInProgress_ && remoteCurlRequest_){
+        // if url is changed, image component is get component property update.
+        // cancel the onging request and made new request to network.
+        CurlNetworking::sharedCurlNetworking()->abortRequest(remoteCurlRequest_);
+        remoteCurlRequest_ = nullptr;
+        //TODO - need to send the onEnd event to APP if it is abort.
+        isRequestInProgress_=false;
+      }
+      imageEventEmitter_->onFastImageLoadStart(imagestart);
+      hasToTriggerEvent_ = true;
+    }
+    return updateMask;
 }
 
 void RSkComponentFastImage::drawAndSubmit() {
@@ -181,12 +193,12 @@ void RSkComponentFastImage::drawAndSubmit() {
   layer()->client().notifyFlushRequired();
 }
 
-// To Do : For event, duplicating code for processing image data.In future will be remove.
+// callback for remoteImageData
 bool RSkComponentFastImage::processImageData(const char* path, char* response, int size) {
   decodedimageCacheData imageCacheData;
   auto component = getComponentData();
   auto const &imageProps = *std::static_pointer_cast<FastImageViewProps const>(component.props);
-  /* Responce callback from network. Get image data, insert in Cache and call Onpaint*/
+  // Responce callback from network. Get image data, insert in Cache and call Onpaint
   sk_sp<SkImage> remoteImageData = RSkImageCacheManager::getImageCacheManagerInstance()->findImageDataInCache(path);
   if(remoteImageData ) {
     if(strcmp(path,imageProps.source.uri.c_str()) == 0) {
@@ -216,27 +228,9 @@ bool RSkComponentFastImage::processImageData(const char* path, char* response, i
   return true;
 }
 
-inline bool shouldCacheData(std::string cacheControlData) {
-  if(cacheControlData.find(RNS_NO_CACHE_STR) != std::string::npos) return false;
-  else if(cacheControlData.find(RNS_NO_STORE_STR) != std::string::npos) return false;
-  else if(cacheControlData.find(RNS_MAX_AGE_0_STR) != std::string::npos) return false;
+void RSkComponentFastImage::requestNetworkImageData(string sourceUri) {
+  remoteCurlRequest_ = std::make_shared<CurlRequest>(nullptr,sourceUri,0,"GET");
 
-  return true;
-}
-
-inline double getCacheMaxAgeDuration(std::string cacheControlData) {
-  size_t maxAgePos = cacheControlData.find(RNS_MAX_AGE_STR);
-  if(maxAgePos != std::string::npos) {
-    size_t maxAgeEndPos = cacheControlData.find(';',maxAgePos);
-    return std::stoi(cacheControlData.substr(maxAgePos+8,maxAgeEndPos));
-  }
-  return DEFAULT_MAX_CACHE_EXPIRY_TIME;
-}
-
-// To Do : For event, duplicating code for requesting network image data.In future will be remove.
-void RSkComponentFastImage::requestNetworkImageData(std::string uri) {
-  auto sharedCurlNetworking = CurlNetworking::sharedCurlNetworking();
-  std::shared_ptr<CurlRequest> remoteCurlRequest = std::make_shared<CurlRequest>(nullptr,uri,0,"GET");
   folly::dynamic query = folly::dynamic::object();
 
   //Before network request, reset the cache info with default values
@@ -244,53 +238,59 @@ void RSkComponentFastImage::requestNetworkImageData(std::string uri) {
   cacheExpiryTime_ = DEFAULT_MAX_CACHE_EXPIRY_TIME;
 
   // headercallback lambda fuction
-  auto headerCallback =  [this, remoteCurlRequest](void* curlresponseData,void *userdata)->bool {
+  auto headerCallback =  [this, weakThis = this->weak_from_this()](void* curlresponseData,void *userdata)->size_t {
+    auto isAlive = weakThis.lock();
+    if(!isAlive) {
+       RNS_LOG_WARN("This object is already destroyed. ignoring the completion callback");
+       return 0;
+     }
+
     CurlResponse *responseData =  (CurlResponse *)curlresponseData;
     CurlRequest *curlRequest = (CurlRequest *) userdata;
-    
-    double responseMaxAgeTime = DEFAULT_MAX_CACHE_EXPIRY_TIME;
+
     // Parse server response headers and retrieve caching details
     auto responseCacheControlData = responseData->headerBuffer.find("Cache-Control");
     if(responseCacheControlData != responseData->headerBuffer.items().end()) {
       std::string responseCacheControlString = responseCacheControlData->second.asString();
-      canCacheData_ = shouldCacheData(responseCacheControlString);
-      if(canCacheData_) responseMaxAgeTime = getCacheMaxAgeDuration(responseCacheControlString);
+      canCacheData_ = remoteCurlRequest_->shouldCacheData();
+      if(canCacheData_) cacheExpiryTime_ = responseData->cacheExpiryTime;
     }
-
-    // TODO : Parse request headers and retrieve caching details
-
-    cacheExpiryTime_ = std::min(responseMaxAgeTime,static_cast<double>(DEFAULT_MAX_CACHE_EXPIRY_TIME));
     RNS_LOG_DEBUG("url [" << curlRequest->URL.c_str() << "] canCacheData[" << canCacheData_ << "] cacheExpiryTime[" << cacheExpiryTime_ << "]");
     return 0;
   };
 
+
   // completioncallback lambda fuction
-  auto completionCallback =  [this, remoteCurlRequest](void* curlresponseData,void *userdata)->bool {
+  auto completionCallback =  [this, weakThis = this->weak_from_this()](void* curlresponseData,void *userdata)->bool {
+    auto isAlive = weakThis.lock();
+    if(!isAlive) {
+      RNS_LOG_WARN("This object is already destroyed. ignoring the completion callback");
+      return 0;
+    }
     CurlResponse *responseData =  (CurlResponse *)curlresponseData;
     CurlRequest * curlRequest = (CurlRequest *) userdata;
     if((!responseData
         || !processImageData(curlRequest->URL.c_str(),responseData->responseBuffer,responseData->contentSize)) && (hasToTriggerEvent_)) {
-      this->sendErrorEvents();
+      sendErrorEvents();
     }
-    //Reset the lamda callback so that curlRequest shared pointer dereffered from the lamda
-    // and gets auto destructored after the completion callback.
-    remoteCurlRequest->curldelegator.CURLNetworkingHeaderCallback = nullptr;
-    remoteCurlRequest->curldelegator.CURLNetworkingCompletionCallback = nullptr;
+    isRequestInProgress_=false;
+    remoteCurlRequest_ = nullptr;
     return 0;
   };
+
   FastImageViewEventEmitter::OnFastImageLoadStart imagestart;
-  remoteCurlRequest->curldelegator.delegatorData = remoteCurlRequest.get();
-  remoteCurlRequest->curldelegator.CURLNetworkingHeaderCallback = headerCallback;
-  remoteCurlRequest->curldelegator.CURLNetworkingCompletionCallback=completionCallback;
+  remoteCurlRequest_->curldelegator.delegatorData = remoteCurlRequest_.get();
+  remoteCurlRequest_->curldelegator.CURLNetworkingHeaderCallback = headerCallback;
+  remoteCurlRequest_->curldelegator.CURLNetworkingCompletionCallback=completionCallback;
   if(!hasToTriggerEvent_) {
-    this->imageEventEmitter_->onFastImageLoadStart(imagestart);
+    imageEventEmitter_->onFastImageLoadStart(imagestart);
     hasToTriggerEvent_ = true;
   }
-  sharedCurlNetworking->sendRequest(remoteCurlRequest,query);
+  CurlNetworking::sharedCurlNetworking()->sendRequest(remoteCurlRequest_,query);
+  isRequestInProgress_ = true;
 }
 
-// To Do : For event, duplicating the code for success and error event.In future will be remove.
- void RSkComponentFastImage::sendErrorEvents() {
+void RSkComponentFastImage::sendErrorEvents() {
    FastImageViewEventEmitter::OnFastImageError imageError;
    FastImageViewEventEmitter::OnFastImageLoadEnd imageLoad;
    imageEventEmitter_->onFastImageError(imageError);
@@ -308,6 +308,18 @@ void RSkComponentFastImage::sendSuccessEvents() {
    imageEventEmitter_->onFastImageLoadEnd(imageLoad);
    hasToTriggerEvent_ = false;
  }
+
+
+RSkComponentFastImage::~RSkComponentFastImage(){
+  // Image component is request send to network by then component is deleted.
+  // still the network component will process the request, by calling abort.
+  // will reduces the load on network and improve the performance.
+  if(isRequestInProgress_ && remoteCurlRequest_){
+    //TODO - need to send the onEnd event to APP if it is abort.
+    CurlNetworking::sharedCurlNetworking()->abortRequest(remoteCurlRequest_);
+    isRequestInProgress_=false;
+  }
+}
 
 } // namespace react
 } // namespace facebook
