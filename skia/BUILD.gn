@@ -31,10 +31,10 @@ rn_cxx_component("fastImage") {
 
   # RNS Fabric Component and its dependencies
   sources += [
-    "RSkComponentProviderFastImage.cpp",
-    "RSkComponentProviderFastImage.h",
-    "RSkComponentFastImage.cpp",
-    "RSkComponentFastImage.h",
+    "RSkComponentProviderFastImageView.cpp",
+    "RSkComponentProviderFastImageView.h",
+    "RSkComponentFastImageView.cpp",
+    "RSkComponentFastImageView.h",
     "react/renderer/components/rnfastimage/ShadowNodes.cpp",
     "react/renderer/components/rnfastimage/Props.cpp",
     "react/renderer/components/rnfastimage/EventEmitters.cpp",

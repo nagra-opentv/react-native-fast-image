@@ -5,8 +5,8 @@
  * found in the LICENSE file.
  */
 
-#include "RSkComponentProviderFastImage.h"
-#include "RSkComponentFastImage.h"
+#include "RSkComponentProviderFastImageView.h"
+#include "RSkComponentFastImageView.h"
 #include "react/renderer/components/rnfastimage/ComponentDescriptors.h"
 
 namespace facebook {

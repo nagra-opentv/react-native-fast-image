@@ -21,7 +21,7 @@
 #include "ReactSkia/views/common/RSkImageUtils.h"
 #include "ReactSkia/views/common/RSkConversion.h"
 #include "ReactSkia/utils/RnsUtils.h"
-#include "RSkComponentFastImage.h"
+#include "RSkComponentFastImageView.h"
 
 namespace facebook {
 namespace react {
