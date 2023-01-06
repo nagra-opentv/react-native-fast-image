@@ -42,7 +42,7 @@ class RSkComponentFastImage final : public RSkComponent {
   std::shared_ptr<FastImageViewEventEmitter const> imageEventEmitter_;
 
  protected:
-  sk_sp<SkImage> networkImageData_;
+  sk_sp<SkImage> networkFastImageData_;
   bool hasToTriggerEvent_{false};
   bool canCacheData_{true};
   double cacheExpiryTime_{DEFAULT_MAX_CACHE_EXPIRY_TIME};
@@ -50,11 +50,12 @@ class RSkComponentFastImage final : public RSkComponent {
   sk_sp<SkImage> getLocalImageData(string sourceUri);
   void requestNetworkImageData(string sourceUri);
 
+  inline bool checkRemoteUri(string sourceUri);
   inline string generateUriPath(string path);
   void drawAndSubmit();
   bool processImageData(const char* path, char* response, int size);
   inline void sendErrorEvents();
-  inline void sendSuccessEvents();
+  inline void sendSuccessEvents(sk_sp<SkImage> imageData);
   void OnPaint(SkCanvas *canvas) override;
 };
 

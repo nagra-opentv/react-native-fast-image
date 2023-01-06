@@ -25,8 +25,10 @@ config("LibFastImage_config") {
 
 rn_cxx_component("fastImage") {
 
-  # RNS Native module and its dependencies
+  # RS Native module and its dependencies
   sources = [
+    "RSFastImageModule.h",
+    "RSFastImageModule.cpp",
   ]
 
   # RNS Fabric Component and its dependencies

@@ -22,10 +22,7 @@ FastImageViewProps::FastImageViewProps(
     defaultSource(convertRawProp(rawProps, "defaultSource", sourceProps.defaultSource, {})),
     resizeMode(convertRawProp(rawProps, "resizeMode", sourceProps.resizeMode, {FastImageViewResizeMode::Cover})),
     tintColor(convertRawProp(rawProps, "tintColor", sourceProps.tintColor, {}))
-      {
-         RNS_LOG_INFO(__func__);
-      
-      }
+    {}
 
 } // namespace react
 } // namespace facebook
