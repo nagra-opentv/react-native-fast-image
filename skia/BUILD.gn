@@ -40,10 +40,6 @@ rn_cxx_component("fastImage") {
     "react/renderer/components/rnfastimage/EventEmitters.cpp",
   ]
 
-  # FastImage cpp sources
-  sources += [
-  ]
-
   public_configs = [ ":LibFastImage_config" ]
   public_configs += [ "//build/secondary/folly:folly_config" ]
   deps = [
