@@ -30,7 +30,7 @@ using namespace RSkImageUtils;
 
 RSkComponentFastImage::RSkComponentFastImage(const ShadowView &shadowView)
     : RSkComponent(shadowView) {
-      imageEventEmitter_ = std::static_pointer_cast<FastImageViewEventEmitter const>(shadowView.eventEmitter);
+      fastImageViewEventEmitter_ = std::static_pointer_cast<FastImageViewEventEmitter const>(shadowView.eventEmitter);
 }
 
 void RSkComponentFastImage::OnPaint(SkCanvas *canvas) {
@@ -104,7 +104,7 @@ void RSkComponentFastImage::OnPaint(SkCanvas *canvas) {
     FastImageViewEventEmitter::OnFastImageLoadStart imagestart;
      if(!(checkRemoteUri(imageProps.source.uri))) {
       if(!hasToTriggerEvent_) {
-        imageEventEmitter_->onFastImageLoadStart(imagestart);
+        fastImageViewEventEmitter_->onFastImageLoadStart(imagestart);
         hasToTriggerEvent_ = true;
       }
       if(hasToTriggerEvent_) sendErrorEvents();
@@ -142,7 +142,7 @@ sk_sp<SkImage> RSkComponentFastImage::getLocalImageData(string sourceUri) {
     RSkImageCacheManager::getImageCacheManagerInstance()->imageDataInsertInCache(sourceUri.c_str(), imageCacheData);
   }
   if(!hasToTriggerEvent_) {
-    imageEventEmitter_->onFastImageLoadStart(FastImageViewEventEmitter::OnFastImageLoadStart{});
+    fastImageViewEventEmitter_->onFastImageLoadStart(FastImageViewEventEmitter::OnFastImageLoadStart{});
     hasToTriggerEvent_ = true;
   }
 
@@ -182,7 +182,7 @@ RnsShell::LayerInvalidateMask RSkComponentFastImage::updateComponentProps(Shared
         //TODO - need to send the onEnd event to APP if it is abort.
         isRequestInProgress_=false;
       }
-      imageEventEmitter_->onFastImageLoadStart(FastImageViewEventEmitter::OnFastImageLoadStart{});
+      fastImageViewEventEmitter_->onFastImageLoadStart(FastImageViewEventEmitter::OnFastImageLoadStart{});
       hasToTriggerEvent_ = true;
     }
     return updateMask;
@@ -286,7 +286,7 @@ void RSkComponentFastImage::requestNetworkImageData(string sourceUri) {
   remoteCurlRequest_->curldelegator.CURLNetworkingHeaderCallback = headerCallback;
   remoteCurlRequest_->curldelegator.CURLNetworkingCompletionCallback=completionCallback;
   if(!hasToTriggerEvent_) {
-    imageEventEmitter_->onFastImageLoadStart(FastImageViewEventEmitter::OnFastImageLoadStart{});
+    fastImageViewEventEmitter_->onFastImageLoadStart(FastImageViewEventEmitter::OnFastImageLoadStart{});
     hasToTriggerEvent_ = true;
   }
   CurlNetworking::sharedCurlNetworking()->sendRequest(remoteCurlRequest_,query);
@@ -294,8 +294,8 @@ void RSkComponentFastImage::requestNetworkImageData(string sourceUri) {
 }
 
 void RSkComponentFastImage::sendErrorEvents() {
-   imageEventEmitter_->onFastImageError(FastImageViewEventEmitter::OnFastImageError{});
-   imageEventEmitter_->onFastImageLoadEnd(FastImageViewEventEmitter::OnFastImageLoadEnd{});
+   fastImageViewEventEmitter_->onFastImageError(FastImageViewEventEmitter::OnFastImageError{});
+   fastImageViewEventEmitter_->onFastImageLoadEnd(FastImageViewEventEmitter::OnFastImageLoadEnd{});
    hasToTriggerEvent_ = false;
  }
 
@@ -303,8 +303,8 @@ void RSkComponentFastImage::sendSuccessEvents(sk_sp<SkImage> imageData) {
    FastImageViewEventEmitter::OnFastImageLoad imageLoadSize;
    imageLoadSize.width=imageData->width();
    imageLoadSize.height = imageData->height();
-   imageEventEmitter_->onFastImageLoad(imageLoadSize);
-   imageEventEmitter_->onFastImageLoadEnd(FastImageViewEventEmitter::OnFastImageLoadEnd{});
+   fastImageViewEventEmitter_->onFastImageLoad(imageLoadSize);
+   fastImageViewEventEmitter_->onFastImageLoadEnd(FastImageViewEventEmitter::OnFastImageLoadEnd{});
    hasToTriggerEvent_ = false;
  }
 

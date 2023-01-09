@@ -24,7 +24,7 @@ void FastImageViewEventEmitter::onFastImageLoad(OnFastImageLoad event) const {
   dispatchEvent("fastImageLoad", [event=std::move(event)](jsi::Runtime &runtime) {
     auto payload = jsi::Object(runtime);
     payload.setProperty(runtime, "width", event.width);
-payload.setProperty(runtime, "height", event.height);
+    payload.setProperty(runtime, "height", event.height);
     return payload;
   });
 }
@@ -46,7 +46,7 @@ void FastImageViewEventEmitter::onFastImageProgress(OnFastImageProgress event) c
   dispatchEvent("fastImageProgress", [event=std::move(event)](jsi::Runtime &runtime) {
     auto payload = jsi::Object(runtime);
     payload.setProperty(runtime, "loaded", event.loaded);
-payload.setProperty(runtime, "total", event.total);
+    payload.setProperty(runtime, "total", event.total);
     return payload;
   });
 }

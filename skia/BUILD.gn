@@ -11,16 +11,9 @@ config("LibFastImage_config") {
     "-Wno-ignored-qualifiers",
   ]
 
-  include_dirs = [".",
-                  "//react-native/",
-                  "//react-native/ReactCommon/",
-                  "//react-native/ReactCommon/jsi/",
-                  "//react-native/ReactCommon/react/renderer/graphics/platform/cxx",
-                  "//react-native/ReactCommon/yoga/",
-                  "//third_party/glog:glog",
-                  "//rns_shell/",
-                  "//ReactSkia/",
-                  ]
+  include_dirs = [
+     ".",
+  ]
 }
 
 rn_cxx_component("fastImage") {
@@ -50,6 +43,10 @@ rn_cxx_component("fastImage") {
     "//skia",
     "//react-native/ReactCommon/react/renderer/core:core",
     "//third_party/libcurl:libcurl",
+    "//react-native/ReactCommon/yoga",
+    "//third_party/glog:glog",
+    "//rns_shell",
+    "//react-native/ReactCommon/jsi",
   ]
 
   with_exceptions = true

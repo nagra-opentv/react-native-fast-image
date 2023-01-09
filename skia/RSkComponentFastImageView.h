@@ -39,7 +39,7 @@ class RSkComponentFastImage final : public RSkComponent {
   FastImgProps imageProps;
   std::shared_ptr<CurlRequest> remoteCurlRequest_{nullptr};
   atomic<bool> isRequestInProgress_{false};
-  std::shared_ptr<FastImageViewEventEmitter const> imageEventEmitter_;
+  std::shared_ptr<FastImageViewEventEmitter const> fastImageViewEventEmitter_;
 
  protected:
   sk_sp<SkImage> networkFastImageData_;

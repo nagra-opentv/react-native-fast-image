@@ -13,7 +13,6 @@
 #include <react/renderer/core/propsConversions.h>
 #include <react/renderer/graphics/Color.h>
 #include <vector>
-#include "ReactSkia/utils/RnsLog.h"
 namespace facebook {
 namespace react {
 
@@ -77,11 +76,6 @@ struct FastImageViewSourceHeadersStruct {
 
 static inline void fromRawValue(const RawValue &value, FastImageViewSourceHeadersStruct &result) {
   auto map = (better::map<std::string, RawValue>)value;
-  RNS_LOG_INFO(__func__ << ":" << __LINE__ );
-  for(auto &kv: map) {
-    RNS_LOG_INFO(kv.first );
-  }
-
   auto tmp_name = map.find("name");
   if (tmp_name != map.end()) {
     fromRawValue(tmp_name->second, result.name);
@@ -115,10 +109,6 @@ struct FastImageViewSourceStruct {
 
 static inline void fromRawValue(const RawValue &value, FastImageViewSourceStruct &result) {
   auto map = (better::map<std::string, RawValue>)value;
-  RNS_LOG_INFO(__func__ << ":" << __LINE__ );
-  for(auto &kv: map) {
-    RNS_LOG_INFO(kv.first );
-  }
   auto tmp_uri = map.find("uri");
   if (tmp_uri != map.end()) {
     fromRawValue(tmp_uri->second, result.uri);
