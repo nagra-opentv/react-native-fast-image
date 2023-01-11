@@ -31,8 +31,11 @@ rn_cxx_component("fastImage") {
     "RSkComponentFastImageView.cpp",
     "RSkComponentFastImageView.h",
     "react/renderer/components/rnfastimage/ShadowNodes.cpp",
+    "react/renderer/components/rnfastimage/ShadowNodes.h",
     "react/renderer/components/rnfastimage/Props.cpp",
+    "react/renderer/components/rnfastimage/Props.h",
     "react/renderer/components/rnfastimage/EventEmitters.cpp",
+    "react/renderer/components/rnfastimage/EventEmitters.h",
   ]
 
   public_configs = [ ":LibFastImage_config" ]

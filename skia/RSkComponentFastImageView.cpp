@@ -94,7 +94,6 @@ void RSkComponentFastImage::OnPaint(SkCanvas *canvas) {
     if(needClipAndRestore) {
       canvas->restore();
     }
-    networkFastImageData_ = nullptr;
     drawBorder(canvas,frame,imageBorderMetrics,imageProps.backgroundColor);
     // Emitting Load completed Event
     if(hasToTriggerEvent_) sendSuccessEvents(imageData);
@@ -184,6 +183,7 @@ RnsShell::LayerInvalidateMask RSkComponentFastImage::updateComponentProps(Shared
       }
       fastImageViewEventEmitter_->onFastImageLoadStart(FastImageViewEventEmitter::OnFastImageLoadStart{});
       hasToTriggerEvent_ = true;
+      networkFastImageData_ = nullptr;
     }
     return updateMask;
 }

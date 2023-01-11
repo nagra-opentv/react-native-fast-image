@@ -40,8 +40,6 @@ class RSkComponentFastImage final : public RSkComponent {
   std::shared_ptr<CurlRequest> remoteCurlRequest_{nullptr};
   atomic<bool> isRequestInProgress_{false};
   std::shared_ptr<FastImageViewEventEmitter const> fastImageViewEventEmitter_;
-
- protected:
   sk_sp<SkImage> networkFastImageData_;
   bool hasToTriggerEvent_{false};
   bool canCacheData_{true};
@@ -56,6 +54,8 @@ class RSkComponentFastImage final : public RSkComponent {
   bool processImageData(const char* path, char* response, int size);
   inline void sendErrorEvents();
   inline void sendSuccessEvents(sk_sp<SkImage> imageData);
+
+ protected:
   void OnPaint(SkCanvas *canvas) override;
 };
 
