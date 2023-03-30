@@ -16,7 +16,7 @@ config("LibFastImage_config") {
   ]
 }
 
-rn_cxx_component("fastImage") {
+rns_cxx_tp_component("rnfastimage") {
 
   # RS Native module and its dependencies
   sources = [

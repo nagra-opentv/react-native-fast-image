@@ -15,9 +15,9 @@ using namespace std;
 namespace facebook {
 namespace xplat {
 
-class RSFastImageModule : public module::CxxModule {
+class FastImageViewModule : public module::CxxModule {
  public:
-  RSFastImageModule();
+  FastImageViewModule();
   virtual auto getConstants() -> std::map<std::string, folly::dynamic>;
   virtual auto getMethods() -> std::vector<Method>;
   std::string getName();

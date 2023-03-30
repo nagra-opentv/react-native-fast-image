@@ -12,26 +12,15 @@
 namespace facebook {
 namespace react {
 
-class RSkComponentProviderFastImage : public RSkComponentProvider {
+class RSkComponentProviderFastImageView : public RSkComponentProvider {
  public:
-  RSkComponentProviderFastImage();
+  RSkComponentProviderFastImageView();
 
  public:
   ComponentDescriptorProvider GetDescriptorProvider() override;
   std::shared_ptr<RSkComponent> CreateComponent(
       const ShadowView &shadowView) override;
 };
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-RNS_USED RSkComponentProvider *RSkComponentProviderFastImageCls() {
-  return new RSkComponentProviderFastImage();
-}
-
-#ifdef __cplusplus
-}
-#endif
 
 } // namespace react
 } // namespace facebook
