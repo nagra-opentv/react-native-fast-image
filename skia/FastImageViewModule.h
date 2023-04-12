@@ -15,12 +15,12 @@ using namespace std;
 namespace facebook {
 namespace xplat {
 
-class RSFastImageModule : public module::CxxModule {
+class FastImageViewModule : public module::CxxModule {
  public:
-  RSFastImageModule();
-  virtual auto getConstants() -> std::map<std::string, folly::dynamic>;
-  virtual auto getMethods() -> std::vector<Method>;
-  std::string getName();
+  FastImageViewModule();
+  std::map<std::string, folly::dynamic> getConstants() override;
+  std::vector<Method> getMethods() override;
+  std::string getName() override;
 };
 
 } // namespace xplat

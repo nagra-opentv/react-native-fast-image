@@ -10,24 +10,24 @@
 #include "ReactSkia/utils/RnsLog.h"
 #include "ReactSkia/views/common/RSkImageCacheManager.h"
 
-#include "RSFastImageModule.h"
+#include "FastImageViewModule.h"
 
 using namespace folly;
 namespace facebook {
 using namespace react;
 namespace xplat {
 
-RSFastImageModule::RSFastImageModule() { }
+FastImageViewModule::FastImageViewModule() { }
 
-auto RSFastImageModule::getConstants() -> std::map<std::string, folly::dynamic> {
+auto FastImageViewModule::getConstants() -> std::map<std::string, folly::dynamic> {
   return {};
 }
 
-std::string RSFastImageModule::getName() {
+std::string FastImageViewModule::getName() {
   return "FastImageView";
 }
 
-auto RSFastImageModule::getMethods() -> std::vector<Method> {
+auto FastImageViewModule::getMethods() -> std::vector<Method> {
   return {
     Method(
       "preload",
@@ -58,7 +58,7 @@ auto RSFastImageModule::getMethods() -> std::vector<Method> {
 #ifdef __cplusplus
 extern "C" {
 #endif
-RNS_EXPORT_MODULE(RSFastImageModule)
+RNS_EXPORT_MODULE(FastImageView)
 #ifdef __cplusplus
 }
 #endif

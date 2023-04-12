@@ -1,0 +1,29 @@
+{
+  "codegenConfig": {
+    "name": "rnfastimage",
+    "version": "8.6.3",
+    "type": "all",
+    "skia": {
+      "codegenNativeComponentNativeProps" : [
+        "FastImageView"
+      ],
+      "TurboModuleRegistryGetEnforcingSpec" : [
+        "FastImageView"
+      ]
+    }
+  },
+  "viewManagerConfig" : {
+    "FastImageView" : {
+      "nativePropsConfig" : [
+      ],
+      "directEventConfig" : [
+        "FastImageLoadStart",
+        "FastImageLoadEnd",
+        "FastImageLoadError",
+        "FastImageError"
+      ],
+      "bubblingEventConfig" : [
+      ]
+    }
+  }
+}
