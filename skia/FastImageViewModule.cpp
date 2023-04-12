@@ -10,7 +10,7 @@
 #include "ReactSkia/utils/RnsLog.h"
 #include "ReactSkia/views/common/RSkImageCacheManager.h"
 
-#include "RSFastImageModule.h"
+#include "FastImageViewModule.h"
 
 using namespace folly;
 namespace facebook {

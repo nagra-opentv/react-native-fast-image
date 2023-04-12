@@ -18,13 +18,13 @@ config("LibFastImage_config") {
 
 rns_cxx_tp_component("rnfastimage") {
 
-  # RS Native module and its dependencies
+  # Native module and its dependencies
   sources = [
-    "RSFastImageModule.h",
-    "RSFastImageModule.cpp",
+    "FastImageViewModule.h",
+    "FastImageViewModule.cpp",
   ]
 
-  # RNS Fabric Component and its dependencies
+  # Fabric Component and its dependencies
   sources += [
     "RSkComponentProviderFastImageView.cpp",
     "RSkComponentProviderFastImageView.h",

@@ -18,9 +18,9 @@ namespace xplat {
 class FastImageViewModule : public module::CxxModule {
  public:
   FastImageViewModule();
-  virtual auto getConstants() -> std::map<std::string, folly::dynamic>;
-  virtual auto getMethods() -> std::vector<Method>;
-  std::string getName();
+  std::map<std::string, folly::dynamic> getConstants() override;
+  std::vector<Method> getMethods() override;
+  std::string getName() override;
 };
 
 } // namespace xplat
