@@ -19,8 +19,6 @@
 #include "rns_shell/compositor/layers/PictureLayer.h"
 
 #include "ReactSkia/sdk/RNSAssetManager.h"
-#include "ReactSkia/views/common/RSkImageUtils.h"
-#include "ReactSkia/views/common/RSkConversion.h"
 #include "ReactSkia/utils/RnsUtils.h"
 #include "RSkComponentFastImageView.h"
 
@@ -330,6 +328,15 @@ void RSkComponentFastImage::sendSuccessEvents(sk_sp<SkImage> imageData) {
    hasToTriggerEvent_ = false;
  }
 
+ImageResizeMode RSkComponentFastImage::convertfromFastImageResizeModeToImageResizemode(FastImageViewResizeMode resizeMode){
+    switch (resizeMode) {
+      case FastImageViewResizeMode::Contain: return ImageResizeMode::Contain;
+      case FastImageViewResizeMode::Cover: return ImageResizeMode::Cover;
+      case FastImageViewResizeMode::Stretch: return ImageResizeMode::Stretch;
+      case FastImageViewResizeMode::Center: return ImageResizeMode::Center;
+      default: return ImageResizeMode::Cover;
+    }
+}
 
 RSkComponentFastImage::~RSkComponentFastImage(){
   // Image component is request send to network by then component is deleted.
