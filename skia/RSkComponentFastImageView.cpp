@@ -52,8 +52,7 @@ void RSkComponentFastImage::OnPaint(SkCanvas *canvas) {
     if(imageProps.source.uri.substr(0, 14) == "file://assets/") {
       imageData = getLocalImageData(imageProps.source.uri);
     } else {
-      if((imageProps.source.uri.substr(0,7) == "http://")
-          || (imageProps.source.uri.substr(0,8) == "https://")){
+      if(RNS_UTILS_IS_HTTP_URL(imageProps.source.uri)){
         if(!isRequestInProgress_){
           RNS_LOG_DEBUG("Fast Image send Network request");
           requestNetworkImageData(imageProps.source.uri);
@@ -126,7 +125,7 @@ void RSkComponentFastImage::OnPaint(SkCanvas *canvas) {
 }
 
 inline bool RSkComponentFastImage::checkRemoteUri(string sourceUri) {
-  if(sourceUri.substr(0, 7) == "http://" || (sourceUri.substr(0, 8) == "https://")) {
+  if(RNS_UTILS_IS_HTTP_URL(sourceUri)) {
     return true;
   }
   return false;
@@ -165,7 +164,7 @@ sk_sp<SkImage> RSkComponentFastImage::getLocalImageData(string sourceUri) {
 }
 
 inline string RSkComponentFastImage::generateUriPath(string path) {
-  if((path.substr(0,7) == "http://")||(path.substr(0,8) == "https://"))
+  if(RNS_UTILS_IS_HTTP_URL(path))
     return path;
   if(path.substr(0, 14) == "file://assets/"){
     path = "./" + path.substr(7);
