@@ -15,6 +15,10 @@
   "viewManagerConfig" : {
     "FastImageView" : {
       "nativePropsConfig" : [
+       "source",
+       "defaultSource",
+       "resizeMode",
+       "tintColor"
       ],
       "directEventConfig" : [
         "FastImageLoadStart",

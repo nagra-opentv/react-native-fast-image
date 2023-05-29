@@ -18,6 +18,7 @@
 
 #include "rns_shell/compositor/layers/PictureLayer.h"
 
+#include "ReactSkia/sdk/RNSAssetManager.h"
 #include "ReactSkia/views/common/RSkImageUtils.h"
 #include "ReactSkia/views/common/RSkConversion.h"
 #include "ReactSkia/utils/RnsUtils.h"
@@ -50,8 +51,19 @@ void RSkComponentFastImage::OnPaint(SkCanvas *canvas) {
 
     if(imageProps.source.uri.substr(0, 14) == "file://assets/") {
       imageData = getLocalImageData(imageProps.source.uri);
-    } else if(!isRequestInProgress_ && checkRemoteUri(imageProps.source.uri)) {
-      requestNetworkImageData(imageProps.source.uri);
+    } else {
+      if(RNS_UTILS_IS_HTTP_URL(imageProps.source.uri)){
+        if(!isRequestInProgress_){
+          RNS_LOG_DEBUG("Fast Image sending Network request");
+          requestNetworkImageData(imageProps.source.uri);
+        }
+        break;
+      }
+      // In application not specified PATH or extention in image source.
+      // Then framework treating it as surce type as Remote. Native code
+      // Generating application specific path & then fetch the imagedata
+      // in that path
+      imageData = getLocalImageData(imageProps.source.uri);
     }
   } while(0);
 
@@ -113,7 +125,7 @@ void RSkComponentFastImage::OnPaint(SkCanvas *canvas) {
 }
 
 inline bool RSkComponentFastImage::checkRemoteUri(string sourceUri) {
-  if(sourceUri.substr(0, 7) == "http://" || (sourceUri.substr(0, 8) == "https://")) {
+  if(RNS_UTILS_IS_HTTP_URL(sourceUri)) {
     return true;
   }
   return false;
@@ -152,9 +164,19 @@ sk_sp<SkImage> RSkComponentFastImage::getLocalImageData(string sourceUri) {
 }
 
 inline string RSkComponentFastImage::generateUriPath(string path) {
-  if(path.substr(0, 14) == "file://assets/")
+  if(RNS_UTILS_IS_HTTP_URL(path))
+    return path;
+  if(path.substr(0, 14) == "file://assets/"){
     path = "./" + path.substr(7);
+  } else if( path.substr(0,5) == "data:" ){
+    RNS_LOG_NOT_IMPL;
+  }else {
+    std::string ImagePath = RNSAssetManager::instance()->getAssetPath(path);
+    path = ImagePath;
+    RNS_LOG_DEBUG("Image path from the AssetManager: "<<path);
+  }
   return path;
+
 }
 
 RnsShell::LayerInvalidateMask RSkComponentFastImage::updateComponentProps(SharedProps newviewProps,bool forceUpdate) {
