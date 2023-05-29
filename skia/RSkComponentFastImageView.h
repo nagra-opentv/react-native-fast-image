@@ -56,7 +56,7 @@ class RSkComponentFastImage final : public RSkComponent {
   bool processImageData(const char* path, char* response, int size);
   inline void sendErrorEvents();
   inline void sendSuccessEvents(sk_sp<SkImage> imageData);
-  ImageResizeMode convertfromFastImageResizeModeToImageResizemode(FastImageViewResizeMode resizeMode);
+  ImageResizeMode fastImageResizeModeToImageResizemode(FastImageViewResizeMode resizeMode);
  protected:
   void OnPaint(SkCanvas *canvas) override;
 };

@@ -86,7 +86,7 @@ void RSkComponentFastImage::OnPaint(SkCanvas *canvas) {
   /*Draw Frame BackGround*/
   drawBackground(canvas,frame,imageBorderMetrics,imageProps.backgroundColor);
   if(imageData) {
-    SkRect imageTargetRect = computeTargetRect({imageData->width(),imageData->height()},frameRect,ImageResizeMode::Cover);
+    SkRect imageTargetRect = computeTargetRect({imageData->width(),imageData->height()},frameRect,fastImageResizeModeToImageResizemode(imageProps.resizeMode));
     SkPaint paint;
 
     /*Draw Image */
@@ -328,7 +328,7 @@ void RSkComponentFastImage::sendSuccessEvents(sk_sp<SkImage> imageData) {
    hasToTriggerEvent_ = false;
  }
 
-ImageResizeMode RSkComponentFastImage::convertfromFastImageResizeModeToImageResizemode(FastImageViewResizeMode resizeMode){
+ImageResizeMode RSkComponentFastImage::fastImageResizeModeToImageResizemode(FastImageViewResizeMode resizeMode){
     switch (resizeMode) {
       case FastImageViewResizeMode::Contain: return ImageResizeMode::Contain;
       case FastImageViewResizeMode::Cover: return ImageResizeMode::Cover;
