@@ -54,7 +54,7 @@ void RSkComponentFastImage::OnPaint(SkCanvas *canvas) {
     } else {
       if(RNS_UTILS_IS_HTTP_URL(imageProps.source.uri)){
         if(!isRequestInProgress_){
-          RNS_LOG_DEBUG("Fast Image send Network request");
+          RNS_LOG_DEBUG("Fast Image sending Network request");
           requestNetworkImageData(imageProps.source.uri);
         }
         break;
