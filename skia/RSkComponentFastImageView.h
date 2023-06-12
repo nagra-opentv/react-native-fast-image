@@ -15,6 +15,8 @@
 #include "ReactSkia/components/RSkComponent.h"
 #include "ReactSkia/sdk/CurlNetworking.h"
 #include "ReactSkia/views/common/RSkImageCacheManager.h"
+#include "ReactSkia/views/common/RSkImageUtils.h"
+#include "ReactSkia/views/common/RSkConversion.h"
 
 #define DEFAULT_IMAGE_FILTER_QUALITY kLow_SkFilterQuality /*Skia's Defualt is kNone_SkFilterQuality*/
 #define DEFAULT_MAX_CACHE_EXPIRY_TIME 1800000 // 30mins in milliseconds 1800000
@@ -54,7 +56,7 @@ class RSkComponentFastImage final : public RSkComponent {
   bool processImageData(const char* path, char* response, int size);
   inline void sendErrorEvents();
   inline void sendSuccessEvents(sk_sp<SkImage> imageData);
-
+  ImageResizeMode fastImageResizeModeToImageResizemode(FastImageViewResizeMode resizeMode);
  protected:
   void OnPaint(SkCanvas *canvas) override;
 };

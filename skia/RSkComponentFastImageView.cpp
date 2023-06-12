@@ -19,8 +19,6 @@
 #include "rns_shell/compositor/layers/PictureLayer.h"
 
 #include "ReactSkia/sdk/RNSAssetManager.h"
-#include "ReactSkia/views/common/RSkImageUtils.h"
-#include "ReactSkia/views/common/RSkConversion.h"
 #include "ReactSkia/utils/RnsUtils.h"
 #include "RSkComponentFastImageView.h"
 
@@ -88,7 +86,7 @@ void RSkComponentFastImage::OnPaint(SkCanvas *canvas) {
   /*Draw Frame BackGround*/
   drawBackground(canvas,frame,imageBorderMetrics,imageProps.backgroundColor);
   if(imageData) {
-    SkRect imageTargetRect = computeTargetRect({imageData->width(),imageData->height()},frameRect,ImageResizeMode::Cover);
+    SkRect imageTargetRect = computeTargetRect({imageData->width(),imageData->height()},frameRect,fastImageResizeModeToImageResizemode(imageProps.resizeMode));
     SkPaint paint;
 
     /*Draw Image */
@@ -330,6 +328,15 @@ void RSkComponentFastImage::sendSuccessEvents(sk_sp<SkImage> imageData) {
    hasToTriggerEvent_ = false;
  }
 
+ImageResizeMode RSkComponentFastImage::fastImageResizeModeToImageResizemode(FastImageViewResizeMode resizeMode){
+    switch (resizeMode) {
+      case FastImageViewResizeMode::Contain: return ImageResizeMode::Contain;
+      case FastImageViewResizeMode::Cover: return ImageResizeMode::Cover;
+      case FastImageViewResizeMode::Stretch: return ImageResizeMode::Stretch;
+      case FastImageViewResizeMode::Center: return ImageResizeMode::Center;
+      default: return ImageResizeMode::Cover;
+    }
+}
 
 RSkComponentFastImage::~RSkComponentFastImage(){
   // Image component is request send to network by then component is deleted.
